@@ -1,0 +1,48 @@
+{% extends 'layout.html' %}
+
+{% block css %}
+    <style>
+        ul{
+            list-style-type: none;
+            padding:0 ;
+            }
+        ul li{
+            float: left;
+            padding: 10px;
+            padding-left: 0;
+            width: 80px;
+        }
+        ul li i{
+            font-size: 18px;
+            margin-left: 5px;
+            color: #6d6565;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    <form action="" method="post" style="margin-top: 10px;margin-left: 10px" >
+        {% csrf_token %}
+
+        {% for field in form %}
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <label for="tiele" class="control-label">
+                            {{ field.label }}
+                        </label>
+                        <span style="color:red">{{ field.errors.0 }}</span>
+                        <div>
+                            {{ field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <input type="submit" class="btn btn-success" value="保存">
+    </form>
+
+
+{% endblock %}

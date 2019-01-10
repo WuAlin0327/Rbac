@@ -1,0 +1,15 @@
+{% for menu in menu_dict.values %}
+    <div class="item">
+        <div class="title">
+            <a href="JavaScript:;" class="stair_menu">
+                <span class="icon-wrap"><i class="{{ menu.icon }}"></i></span>{{ menu.title }}</a>
+        </div>
+        <div class="{{ menu.class }}">
+            {% for item in menu.children %}
+                    <a href="{{ item.url }}" class="second_menu {{ item.class }}">{{ item.title }}</a>
+
+            {% endfor %}
+        </div>
+    </div>
+
+{% endfor %}

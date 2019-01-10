@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+
+
+{% block content %}
+    <div class="luffy-container">
+        <div class="btn-group" style="margin: 5px 0">
+                <a class="btn btn-default" href="{% url 'rbac:user_add' %}">
+                    <i class="fa fa-file-excel-o" aria-hidden="true"></i> 添加用户
+                </a>
+        </div>
+         <table class="table table-bordered table-striped">
+                <thead>
+                <tr>
+                    <th>id</th>
+                    <th>用户名</th>
+                    <th>邮箱</th>
+                    <th>密码</th>
+                    <th>选项</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td><a href="{% url 'rbac:user_reset' num=user.id %}">重置密码</a></td>
+                        <td>
+                            <a href="{% url 'rbac:user_edit' num=user.id %}" class="btn btn-info">
+                                <i class="fa fa-sun-o" aria-hidden="true"></i>&nbsp;编辑</a>
+                            <a href="{% url 'rbac:user_del' num=user.id %}" class="btn btn-success">
+                                <i class="fa fa-remove" aria-hidden="true"></i>&nbsp;删除</a>
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+            </table>
+    </div>
+{% endblock %}

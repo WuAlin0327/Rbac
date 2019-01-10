@@ -1,0 +1,11 @@
+{% for menu in menu_list %}
+    {% if path_info == menu.url %}
+    <a href="{{ menu.url }}" class="active">
+        <span class="icon-wrap"><i class="{{ menu.icon }}"></i></span>{{ menu.title }}</a>
+       {% else %}
+        <a href="{{ menu.url }}">
+        <span class="icon-wrap"><i class="{{ menu.icon }}"></i></span>{{ menu.title }}</a>
+    {% endif %}
+    
+
+{% endfor %}
