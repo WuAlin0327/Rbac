@@ -9,10 +9,11 @@ class Permission(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(verbose_name='标题',max_length=32)
     url = models.CharField(verbose_name='含正则的URL',max_length=128)
+    name = models.CharField(verbose_name='URL的别名', max_length=32, unique=True)
     menu = models.ForeignKey(verbose_name='所属菜单',to='Menu',to_field='id',null=True,help_text='null表示不是菜单,非null表示是二级菜单',blank=True,on_delete=True)
     # icon = models.CharField(verbose_name='图标',max_length=32,null=True,blank=True)
     pid = models.ForeignKey(verbose_name='关联的权限',to='Permission',null=True,blank=True,related_name='parent',on_delete=True,help_text='对于非菜单权限需要选择一个可以成为菜单的权限，用户做默认展开和选中菜单')
-    name = models.CharField(verbose_name='URL的别名',max_length=32,unique=True)
+
 
 
     def __str__(self):

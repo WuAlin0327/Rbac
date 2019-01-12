@@ -16,10 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include,re_path
 from django.conf.urls import url
+from rbac.views import menu
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include('web.urls')),
-    url(r'^rbac/',include('rbac.urls',namespace='rbac'))
+    path('',include('web.urls',namespace='web')),
+    url(r'^rbac/',include('rbac.urls',namespace='rbac')),
+    url('^index/$',lambda x,y:x+y),
 
 ]

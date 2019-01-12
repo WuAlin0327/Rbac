@@ -1,0 +1,40 @@
+{% extends 'layout.html' %}
+{% load rbac %}
+
+{% block content %}
+    <div class="luffy-container">
+        <div class="row">
+            <div class="col-lg-12">
+                <form action="" method="post">
+                    {% csrf_token %}
+                    {{ formset.management_form }} {#必须要增加这段,否则会报错#}
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+
+                            <th>title</th>
+                            <th>url</th>
+                            <th>别名</th>
+                            <th>主菜单</th>
+                            <th>权限菜单</th>
+                        </tr>
+
+
+                        </thead>
+                        <tbody>
+                        {% for form in formset %}
+                            <tr>
+                                {% for field in form %}
+                                    <td>{{ field }}</td> <span>{{ field.errors }}</span>
+                                {% endfor %}
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+                    </table>
+                    <input type="submit" class="btn btn-success" value="增加">
+                </form>
+            </div>
+
+{% endblock %}

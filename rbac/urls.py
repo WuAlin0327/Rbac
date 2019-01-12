@@ -24,4 +24,16 @@ urlpatterns = [
     path('menu/del/<int:num>/',menu.menu_del,name='menu_del'),
     path('menu/edit/<int:num>/',menu.menu_edit,name='menu_edit'),
 
+    path('second/second_add/<int:menu_id>', menu.second_menu_add, name='second_menu_add'),
+    path('second/del/<int:num>/', menu.second_menu_del, name='second_menu_del'),
+    path('second/edit/<int:num>/', menu.second_menu_edit, name='second_menu_edit'),
+
+    path('permission/add/<int:second_id>', menu.permission_add,name='permission_add'),
+    path('permission/del/<int:second_id>', menu.permission_del,name='permission_del'),
+    path('permission/edit/<int:second_id>', menu.permission_edit,name='permission_edit'),
+
+    # 批量操作
+
+    path('multi/permission/',menu.multi_permission,name='multi_permission')
+
 ]
