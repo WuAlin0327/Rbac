@@ -44,7 +44,6 @@ import wxpy
 import requests
 from lxml import etree
 
-
 # def get_moji(url):
 #     moji_page = requests.get(url=url).text
 #     tree = etree.HTML(moji_page)
@@ -80,3 +79,5 @@ from lxml import etree
 #   * Make sure each ForeignKey has `on_delete` set to the desired behavior.
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
+
+

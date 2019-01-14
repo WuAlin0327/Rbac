@@ -3,38 +3,134 @@
 
 {% block content %}
     <div class="luffy-container">
-        <div class="row">
-            <div class="col-lg-12">
-                <form action="" method="post">
-                    {% csrf_token %}
-                    {{ formset.management_form }} {#必须要增加这段,否则会报错#}
-                    <table class="table table-bordered">
-                        <thead>
-                        <tr>
+        <form action="?type=generate" method="post">
+            {% csrf_token %}
+            {{ generate_formset.management_form }} {#必须要增加这段,否则会报错#}
+            <div class="panel panel-default" style="border-radius: 10px">
+                <div class="panel-heading clearfix">
+                    <span style="font-size: 20px"><i class="fa fa-code"></i>&nbsp;待新建的权限列表</span>
+                    <button class="btn btn-primary pull-right" type="submit">
+                        <i class="fa fa-database"></i>&nbsp;添加
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
 
-                            <th>title</th>
-                            <th>url</th>
-                            <th>别名</th>
-                            <th>主菜单</th>
-                            <th>权限菜单</th>
-                        </tr>
-
-
-                        </thead>
-                        <tbody>
-                        {% for form in formset %}
+                        <table class="table table-bordered">
+                            <thead>
                             <tr>
-                                {% for field in form %}
-                                    <td>{{ field }}</td> <span>{{ field.errors }}</span>
-                                {% endfor %}
+                                <th>序号</th>
+                                <th>title</th>
+                                <th>url</th>
+                                <th>别名</th>
+                                <th>主菜单</th>
+                                <th>权限菜单</th>
                             </tr>
+                            </thead>
+                            <tbody>
+                            {% for form in generate_formset %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    {% for field in form %}
+                                        <td>{{ field }}<span style="color:red">{{ field.errors }}</span></td>
+                                    {% endfor %}
+                                </tr>
 
-                        {% endfor %}
+                            {% endfor %}
 
-                        </tbody>
-                    </table>
-                    <input type="submit" class="btn btn-success" value="增加">
-                </form>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+
             </div>
+        </form>
+
+            <div class="panel panel-default" style="border-radius: 10px">
+                <div class="panel-heading clearfix">
+                    <span style="font-size: 20px"><i class="fa fa-bookmark-o"></i>&nbsp;待删除的权限列表</span>
+
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>title</th>
+                                <th>url</th>
+                                <th>别名</th>
+                                <th>选项</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for form in delete_row_list %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ form.title }}</td>
+                                    <td>{{ form.url }}</td>
+                                    <td>{{ form.name }}</td>
+                                    <td><a href="{% url 'rbac:multi_permission_del' id=form.id %}" class="btn-sm btn-danger "><i class="fa fa-close"></i>删除</a></td>
+                                </tr>
+
+                            {% endfor %}
+
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+
+        <form action="?type=update" method="post">
+            {% csrf_token %}
+            {{ update_formset.management_form }} {#必须要增加这段,否则会报错#}
+            <div class="panel panel-default" style="border-radius: 10px">
+                <div class="panel-heading clearfix">
+                    <span style="font-size: 20px"><i class="fa fa-cog"></i>&nbsp;待更改的权限列表</span>
+                    <button type="submit" class="btn btn-primary pull-right">
+                        <i class="fa fa-floppy-o"></i>&nbsp;修改
+                    </button>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>title</th>
+                                <th>url</th>
+                                <th>别名</th>
+                                <th>主菜单</th>
+                                <th>权限菜单</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for form in update_formset %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    {% for field in form %}
+                                        {% if forloop.first %}
+                                            {{ field }}
+                                        {% else %}
+                                            <td>{{ field }}<span style="color:red;">{{ field.errors }}</span></td>
+                                        {% endif %}
+
+                                    {% endfor %}
+                                </tr>
+
+                            {% endfor %}
+
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 
 {% endblock %}

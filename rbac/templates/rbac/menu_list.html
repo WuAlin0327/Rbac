@@ -59,7 +59,7 @@
                             <!-- Default panel contents -->
                             <div class="panel-heading clearfix">
                                 <i class="fa fa-code"></i>&nbsp;<strong>二级菜单</strong>
-                                <a href="{% memory_url request 'rbac:second_menu_add' menu_id=menu_id %}"
+                                <a href="{% memory_url request 'rbac:second_menu_add' num=menu_id %}"
                                    class="btn btn-success pull-right "><i class="fa fa-pencil"></i>&nbsp;新增</a>
                             </div>
 
@@ -112,7 +112,7 @@
                                 {% if sid %}
                                 <a href="{% memory_url request 'rbac:permission_add' second_id=sid %}" class="btn btn-success pull-right "><i class="fa fa-pencil"></i>&nbsp;新增</a>
                                 {% endif %}
-                                <a href="{% url 'rbac:permission_batch_add' %}" class="btn btn-primary pull-right">批量操作</a>
+                                <a href="{% url 'rbac:multi_permission' %}" class="btn btn-primary pull-right">批量操作</a>
 
                             </div>
 

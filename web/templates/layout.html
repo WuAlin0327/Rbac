@@ -172,7 +172,7 @@
     <div class="left-menu">
         <div class="menu-body">
             <div class="static-menu">
-{#                {% multi_menu request %}#}
+                {% multi_menu request %}
 
 {#                <a href="/customer/list/" class="active">#}
 {#                    <span class="icon-wrap"><i class="fa fa-connectdevelop"></i></span> 客户管理</a>#}
@@ -185,7 +185,7 @@
     <div class="right-body">
 
 {#                使用模板语法渲染动态导航#}
-{#                {% url_record request %}#}
+                {% url_record request %}
 
         {% block content %} {% endblock %}
     </div>

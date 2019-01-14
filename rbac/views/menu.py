@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, HttpResponse
-from rbac.forms.menu import MenuModelForm, SecondMenuModelForm, PermissionModelForm, UpdatePermissionForm,MultiAddPermissionForm
+from rbac.forms.menu import MenuModelForm, SecondMenuModelForm, PermissionModelForm, UpdatePermissionForm, \
+    MultiAddPermissionForm
 from rbac import models
 from rbac.service.urls import memory_reverse
 from django.forms import formset_factory
 from rbac.service.get_url import get_all_url_dict
 from collections import OrderedDict
+from django.urls import reverse
 
 
 def menu_list(request):
@@ -19,6 +21,7 @@ def menu_list(request):
     mid = request.GET.get('mid')
     if mid:
         second_menu = models.Permission.objects.filter(menu_id=mid)
+
         second_id = request.GET.get('sid')
         if second_id:
             # 如果前端传过来的sid存在的话
@@ -197,6 +200,7 @@ def permission_edit(request, second_id):
         return redirect(url)
     return render(request, 'rbac/change.html', {'form': form})
 
+
 #
 # def permission_batch_add(request):
 #     # 先实例出formset对象，参数一是需要渲染的ModelForm,第二个参数是需要增加多少个
@@ -233,14 +237,63 @@ def permission_edit(request, second_id):
 #     return render(request, 'rbac/multi_permission.html', {'formset': formset})
 
 
-
-
 def multi_permission(request):
     """
     批量操作权限:获取项目中所有的URL
     :param request:
     :return:
     """
+    post_type = request.GET.get('type')
+
+    generate_formset_class = formset_factory(MultiAddPermissionForm, extra=0)
+    update_formset_class = formset_factory(UpdatePermissionForm, extra=0)
+    generate_formset = None
+    update_formset = None
+    if request.method == 'POST' and post_type == 'generate':
+        # 批量添加
+        formset = generate_formset_class(data=request.POST)
+        if formset.is_valid():
+            post_row_list = formset.cleaned_data
+
+            # 用于批量增加
+            object_list = []
+            has_errors = False
+            for i in range(0, formset.total_form_count()):
+                row_dict = post_row_list[i]
+                try:
+                    new_obj = models.Permission(**row_dict)
+                    new_obj.validate_unique()
+                    object_list.append(new_obj)
+                except Exception as e:
+                    formset.errors[i].update(e)
+                    generate_formset = formset
+                    has_errors = True
+            if not has_errors:  # 如果新添加的数据没有错误，就写入数据库
+                models.Permission.objects.bulk_create(object_list, batch_size=100)
+        else:
+            generate_formset = formset
+
+    if request.method == 'POST' and post_type == 'update':
+        # 批量更新
+        formset = update_formset_class(data=request.POST)
+        if formset.is_valid():
+            post_row_list = formset.cleaned_data
+            for i in range(0, formset.total_form_count()):
+                row_dict = post_row_list[i]
+                # 取出id，根据id更改数据库中的数据
+                permission_id = row_dict.pop('id')
+                try:
+                    row_object = models.Permission.objects.filter(id=permission_id).first()
+                    for k, v in row_dict.items():
+                        setattr(row_object, k, v)
+                    row_object.validate_unique()
+                    row_object.save()
+                except Exception as e:
+                    formset.errors[i].update(e)
+                    update_formset = formset
+        else:
+            update_formset = formset
+
     # 1.获取项目中所有的url
     all_url_dict = get_all_url_dict()
     router_name_set = set(all_url_dict.keys())
@@ -254,8 +307,8 @@ def multi_permission(request):
     """
 
     # 2.获取数据库中所有的URL
-    permission = models.Permission.objects.all().values('id','title','name','url','menu_id','pid_id')
-    permission_ordered_dict =OrderedDict()
+    permission = models.Permission.objects.all().values('id', 'title', 'name', 'url', 'menu_id', 'pid_id')
+    permission_ordered_dict = OrderedDict()
     """
         'customer_list':{'id': 1, 'title': '客户列表', 'name': 'customer_list', 'url': '/customer/list/', 'menu_id': 1, 'pid_id': None}
         ...
@@ -265,34 +318,161 @@ def multi_permission(request):
     permission_name_set = set(permission_ordered_dict.keys())
 
     # 判断获取的路由URL是否和数据库中URL一致
-    for name,value in permission_ordered_dict.items():
+    for name, value in permission_ordered_dict.items():
         router_row_dict = all_url_dict.get(name)
         if not router_row_dict:
             continue
         if value['url'] != router_row_dict['url']:
             value['url'] = '路由和数据库中不一致'
 
-
-
     # 3.应该添加，删除，修改的权限有哪些
-    generate_name_list = router_name_set - permission_name_set # 应该需要增加的
-    generate_formset_class = formset_factory(MultiAddPermissionForm,extra=0)
-    generate_formset = generate_formset_class(
-        initial=[ row_dict for row,row_dict in all_url_dict.items() if row in generate_name_list]
-    )
-
+    if not generate_formset:
+        generate_name_list = router_name_set - permission_name_set  # 应该需要增加的
+        generate_formset = generate_formset_class(
+            initial=[row_dict for row, row_dict in all_url_dict.items() if row in generate_name_list]
+        )
 
     # 计算出应该删除的name
-    delete_name_list = permission_name_set - router_name_set # 应该删除的
-    delete_row_list = [row_dict for name,row_dict in permission_ordered_dict.items() if name in delete_name_list]
-
+    delete_name_list = permission_name_set - router_name_set  # 应该删除的
+    delete_row_list = [row_dict for name, row_dict in permission_ordered_dict.items() if name in delete_name_list]
 
     # 计算出应该修改的name。必须要有一个隐藏的id
-    update_name_list = permission_name_set & router_name_set# 应该更新的
-    update_formset_class = formset_factory(UpdatePermissionForm,extra=0)
-    update_formset = generate_formset_class(
-        initial=[ row_dict for name,row_dict in permission_ordered_dict.items() if name in update_name_list]
-    )
+
+    if not update_formset:
+        update_name_list = permission_name_set & router_name_set  # 应该更新的
+
+        update_formset = update_formset_class(
+            initial=[row_dict for name, row_dict in permission_ordered_dict.items() if name in update_name_list]
+        )
+
+    return render(request, 'rbac/multi_permission.html',
+                  {
+                      'generate_formset': generate_formset,
+                      'delete_row_list': delete_row_list,
+                      'update_formset': update_formset
+
+                  })
 
 
-    return render(request,'rbac/')
+def multi_permission_del(request,id):
+    cancel = reverse('rbac:multi_permission')
+    if request.method == 'POST':
+        models.Permission.objects.filter(id=id).delete()
+        return redirect(cancel)
+    return render(request, 'rbac/delete.html', {'cancel': cancel})
+
+
+def distribute_permission(request):
+    """
+    权限分类
+    :param request:
+    :return:
+    """
+    user_has_role_list = None
+    user_has_permission_list = None
+    role_has_permission_list = None
+    user_id = request.GET.get('uid')
+    user_object = models.UserInfo.objects.filter(id=user_id).first()
+    rid = request.GET.get('rid')
+    role_obj = models.Role.objects.filter(id=rid).first()
+
+    # post请求
+    post_type = request.GET.get('type')
+    if request.method == 'POST' and post_type == 'role':
+        role_id = request.POST.getlist('role_id')
+        if user_object:
+            user_object.roles.set(role_id)
+        else:
+            return HttpResponse('请选择用户')
+
+    if request.method =='POST' and post_type == 'permission':
+        permissions_id = request.POST.getlist('permissions_id')
+        select_all = request.POST.getlist('select_all')
+        if not role_obj:
+            return HttpResponse('请选择角色后进行分配权限')
+        role_obj.permission.set(permissions_id)
+
+    # 根据rid(角色id)取出角色判断角色是否存在，存在则取出该角色所拥有的权限(permission)的id
+    if role_obj:
+        role_has_permission_list = [row['id'] for row in role_obj.permission.all().values('id')]
+
+
+    # 根据user_id(用户id)取出用户判断用户是否存在，存在则取出该用户所拥有的角色(role)和权限(permission)的id
+    if user_object:
+        user_has_role_list = [row.id for row in user_object.roles.all()]  # 获取当前用户所有的角色
+        if not role_obj:
+            user_has_permission_list = [row['permission__id'] for row in
+                                    user_object.roles.all().values('permission__id').distinct()]
+    else:
+        user_id = None
+
+    user = models.UserInfo.objects.all()
+    role = models.Role.objects.all()
+    menu_permission_dict = {}
+    # 一级菜单
+    menu_list = models.Menu.objects.values('id', 'title')
+    for item in menu_list:
+        item['children'] = []
+        menu_permission_dict[item['id']] = item
+
+    # 所有二级菜单
+    all_second_menu_dict = {}
+    second_menu_list = models.Permission.objects.filter(menu__isnull=False).values('id', 'title', 'menu_id')
+    for item in second_menu_list:
+        item['children'] = []
+        all_second_menu_dict[item['id']] = item
+        menu_id = item['menu_id']
+        menu_permission_dict[menu_id]['children'].append(item)
+
+    # 三级菜单
+    all_permission_list = models.Permission.objects.filter(menu__isnull=True).values('id', 'title', 'pid_id')
+    for row in all_permission_list:
+        pid = row['pid_id']
+        if not pid:
+            continue
+        all_second_menu_dict[pid]['children'].append(row)
+
+    # 组成我们需要的数据结构：通过三次循环去组成三级菜单数据结构
+    # menu_permission_list = []
+    # for menu in menu_list:
+    #     dic = {
+    #         'id': menu.get('id'),
+    #         'title': menu.get('title'),
+    #         'children': []
+    #     }
+    #     for second in second_menu_list:
+    #         menu_id = second.get('menu_id')
+    #         second_dic = {
+    #             'id':second['id'],
+    #             'title':second['title'],
+    #             'menu_id':menu_id,
+    #             'children':[]
+    #         }
+    #         if menu_id == menu['id']:
+    #             dic['children'].append(second_dic)
+    #         else:
+    #             continue
+    #         for permission in all_permission_list:
+    #             pid_id = permission['pid_id']
+    #             permission_dic = {
+    #                 'id':permission['id'],
+    #                 'title':permission['title'],
+    #                 'pid':pid_id
+    #             }
+    #
+    #             if pid_id == second['id']:
+    #                 second_dic['children'].append(permission_dic)
+    #     menu_permission_list.append(dic)
+    return render(
+        request,
+        'rbac/distribute_permission.html',
+        {
+            'user': user,
+            'role': role,
+            'menu_permission_dict': menu_list,
+            'user_id': user_id,
+            'role_id_list': user_has_role_list,
+            'permission_id_list': user_has_permission_list,
+            'rid': rid,
+            'role_has_permission_list':role_has_permission_list
+        })

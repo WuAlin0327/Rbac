@@ -1,0 +1,212 @@
+{% extends 'layout.html' %}
+{% load rbac %}
+{% block css %}
+    <style>
+        .active {
+            border-left: 3px solid #f0ad4e;
+            border-radius: 5px;
+        }
+
+        .active_a {
+            color: red;
+        }
+
+        .root {
+            background-color: darkgrey;
+        }
+
+        .children {
+            margin-left: 10px;
+        }
+
+        .children div {
+            display: inline-block;
+            padding-left: 20px;
+        }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="luffy-container">
+        <div class="row">
+            <div class="col-md-3 ">
+                <div class="bs-example" data-example-id="table-within-panel">
+                    <div class="panel panel-default ">
+                        <!-- Default panel contents -->
+                        <div class="panel-heading clearfix">
+                            <i class="fa fa-book"></i>&nbsp;<strong>用户信息</strong>
+
+                        </div>
+                        <div class="panel-body">
+                            <ul>
+                                {% for row in user %}
+                                    <li><a href="?uid={{ row.id }}"
+                                           {% if row.id|safe == user_id %}class="active_a"{% endif %}>{{ row.username }}</a>
+                                    </li>
+
+                                {% endfor %}
+
+                            </ul>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+            {#        提交用户分配的角色#}
+            <form action="?uid={{ user_id }}&type=role" method="post">
+            {% csrf_token %}
+
+                <div class="col-lg-3">
+                    <div class="bs-example" data-example-id="table-within-panel">
+                        <div class="panel panel-default ">
+                            <!-- Default panel contents -->
+                            <div class="panel-heading clearfix">
+                                <i class="fa fa-code"></i>&nbsp;<strong>角色信息</strong>
+                                {% if user_id %}
+                                    <button type="submit" class="btn btn-primary pull-right"><i class="fa fa-save"></i>&nbsp;保存
+                                    </button>
+                                {% endif %}
+
+                            </div>
+                            <div class="panel-body">
+                                点击用户后才可以分配角色
+                                <hr>
+
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>角色</th>
+                                        <th>选项</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for row in role %}
+                                        <tr {% if row.id|safe == rid %}class="active"{% endif %}>
+                                            {% if user_id %}
+                                            <th><a href="?uid={{ user_id }}&rid={{ row.id }}">{{ row.title }}</a></th>
+                                                {% else %}
+                                                <th><a href="?rid={{ row.id }}">{{ row.title }}</a></th>
+                                            {% endif %}
+
+                                            <th>
+                                                <input type="checkbox" name="role_id" value="{{ row.id }}"
+                                                       {% if row.id in role_id_list %}checked{% endif %}
+                                                       id="user_{{ row.id }}">
+                                            </th>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Table -->
+
+
+                        </div>
+                    </div>
+
+
+                </div>
+            </form>
+
+            <form action="?rid={{ rid }}{% if user_id %}&uid={{ user_id }}{% endif %}&type=permission" method="post">
+            {% csrf_token %}
+                <div class="col-lg-6">
+
+                <div class="bs-example" data-example-id="table-within-panel">
+                    <div class="panel panel-default ">
+                        <!-- Default panel contents -->
+                        <div class="panel-heading clearfix">
+                            <i class="fa fa-bars"></i>&nbsp;<strong>权限分配</strong>
+                            {% if rid %}
+                                <button type="submit" class="btn btn-primary pull-right"><i class="fa fa-save"></i>&nbsp;保存
+                                    </button>
+                            {% endif %}
+                        </div>
+                        <div class="panel-body">
+                            请选中角色分配权限.....
+
+                        </div>
+                        <table class="table">
+                            {% for menu in menu_permission_dict %}
+                                <tr class="root">
+                                    <td>
+                                        <i class="fa fa-caret-down"></i>
+                                        <span style="font-size: 20px">{{ menu.title }}</span>
+                                        <div class="select-help pull-right">
+                                            <div class="check-all">
+                                                <label for="check_all_{{ menu.id }}">全选</label>
+                                                <input type="checkbox" id="check_all_{{ menu.id }}" name="select_all" value="{{ menu.id }}">
+
+                                            </div>
+
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% if menu.children %}
+                                    <tr class="second">
+                                        <td>
+                                            {% for second_menu in menu.children %}
+                                                <div class="parent">
+                                                    <input type="checkbox" name="permissions_id"
+                                                           id="permission_{{ second_menu.id }}"
+                                                           value="{{ second_menu.id }}"
+                                                           {% if second_menu.id in permission_id_list %}checked {% endif %}
+                                                           {% if second_menu.id in role_has_permission_list %}checked{% endif %}
+                                                    >
+                                                    <label for="permission_{{ second_menu.id }}">{{ second_menu.title }}(菜单)</label>
+                                                </div>
+                                                <div class="children">
+                                                    {% for three_menu in second_menu.children %}
+                                                        <div>
+                                                            <input type="checkbox" name="permissions_id"
+                                                                   id="permission_{{ three_menu.id }}"
+                                                                   value="{{ three_menu.id }}"
+                                                                   {% if three_menu.id in permission_id_list %}checked {% endif %}
+                                                                    {% if three_menu.id in role_has_permission_list %}checked{% endif %}
+                                                            >
+                                                            <label for="permission_{{ three_menu.id }}">{{ three_menu.title }}</label>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+
+                                            {% endfor %}
+
+                                        </td>
+                                    </tr>
+                                {% endif %}
+
+
+
+
+
+
+                            {% endfor %}
+                        </table>
+
+
+                    </div>
+                </div>
+
+
+            </div>
+            </form>
+
+
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript">
+    // 使用js控制操作全选或者全部取消
+        $(function () {
+            $('.check-all input:checkbox').change(function () {
+                $(this).parents('.root').next().find(':checkbox').prop('checked',$(this).prop('checked'))
+            })
+        })
+    </script>
+{% endblock %}

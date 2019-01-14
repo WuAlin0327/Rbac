@@ -10,11 +10,7 @@ def check_url_exclude(url):
     :param url:
     :return:
     """
-    exclude_list = [
-        '/admin/.*',
-        '/login/'
-    ]
-    for reg in exclude_list:
+    for reg in settings.AUTO_EXCLUDE_LIST:
         if re.match(reg,url):
             return True
 
