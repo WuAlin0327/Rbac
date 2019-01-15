@@ -73,6 +73,7 @@ AUTO_EXCLUDE_LIST = [
         '/index/'
     ]
 ```
+
 在根路由添加rbac的路由分发，必须设置namespace='rbac'
 ```
 urlpatterns = [
