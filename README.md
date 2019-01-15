@@ -146,11 +146,11 @@ VALID_URL_LIST = [
 控制一个用户是否拥有该a标签或者按钮的权限去显示或者隐藏该按钮，必须某个用户只有查看用户列表的权限，编辑用户与删除用户的按钮不应该显示在页面，rbac组件给该功能提供了一个模板语法。例：判断显示还是隐藏添加客户的按钮
 ```
 # 导入自定义模板
-{% load rbac %}
+# {% load rbac %}
 # 固定格式 request|has_permission:url的别名,该模板语法返回值是True或者False，返回True则渲染该按钮
-{% if request|has_permission:'customer_add' %}
-    <a href='{% url 'customer_add' %}>添加客户</a>
-{% endif %}
+# {% if request|has_permission:'customer_add' %}
+#     <a href='{% url 'customer_add' %}>添加客户</a>
+# {% endif %}
 
 ```
 
