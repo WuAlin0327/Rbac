@@ -73,6 +73,263 @@
             </div><!-- /.navbar-collapse -->
         </div><!-- /.container-fluid -->
     </div>
+    <div class="container">
+        <article class="markdown-body entry-content" itemprop="text">
+            <h2><a id="user-content-rbac基于角色的权限管理组件使用文档" class="anchor" aria-hidden="true" href="#rbac基于角色的权限管理组件使用文档">
+                <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16"
+                     aria-hidden="true">
+                    <path fill-rule="evenodd"
+                          d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+                </svg>
+            </a>Rbac(基于角色的权限管理组件)使用文档
+            </h2>
+            <ol>
+                <li>克隆该项目到你的电脑上</li>
+            </ol>
+            <pre><code>git clone https://github.com/WuAlin0327/CRM
+</code></pre>
+            <ol start="2">
+                <li>复制rbac到你的项目中</li>
+                <li>将rbac/migtations中的迁移记录删除</li>
+            </ol>
+            <h3><a id="user-content-业务系统" class="anchor" aria-hidden="true" href="#业务系统">
+                <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16"
+                     aria-hidden="true">
+                    <path fill-rule="evenodd"
+                          d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+                </svg>
+            </a>业务系统
+            </h3>
+            <ol>
+                <li>业务系统中用户表结构设计：业务表结构中的用户表需要和rbac中的用户有继承关系</li>
+            </ol>
+            <p>业务/models.py</p>
+            <pre><code>from rbac.models import UserInfo as RbacUserInfo
+class UserInfo(RbacUserInfo):
+    phone = models.CharField(verbose_name='联系方式',max_length=32)
+    level_choices = (
+        (1,'T1'),
+        (2,'T2'),
+        (3,'T3')
+    )
+    level = models.IntegerField('级别',choices=level_choices)
+</code></pre>
+            <p>rbac/models.py</p>
+            <pre><code>...
+class UserInfo(models.Model):
+    id = models.AutoField(primary_key=True)
+    username = models.CharField(verbose_name='用户名',max_length=32)
+    email = models.EmailField(verbose_name='邮箱',null=True)
+    password = models.CharField(verbose_name='密码',max_length=16)
+    roles = models.ManyToManyField(verbose_name='用户的角色',to=Role)# Role不要加引号，否则会报错
+    create_data = models.DateField(auto_created=True,null=True)
+
+    def __str__(self):
+        return self.username
+</code></pre>
+            <ol start="2">
+                <li>将业务系统中的用户表的路径写到配置文件中。用于在rbac分配权限时，读取业务表中的用户信息</li>
+            </ol>
+            <pre><code>RBAC_USER_MODEL_CLASS = 'app01.models.UserInfo'
+</code></pre>
+            <ol start="3">
+                <li>业务逻辑开发
+                    将所有的路由都设置name属性，name不能重复,用于反向生成URL以及粒度控制到按钮级别的权限控制
+                </li>
+            </ol>
+            <p>如：</p>
+            <pre><code>urlpatterns = [
+
+    url(r'^customer/list/$', customer.customer_list,name='customer_list'),
+    url(r'^customer/add/$', customer.customer_add,name='customer_add'),
+    url(r'^customer/edit/(?P&lt;cid&gt;\d+)/$', customer.customer_edit,name='customer_edit'),
+    url(r'^customer/del/(?P&lt;cid&gt;\d+)/$', customer.customer_del,name='customer_del'),
+    url(r'^customer/import/$', customer.customer_import,name='customer_import'),
+    url(r'^customer/tpl/$', customer.customer_tpl,name='customer_tpl'),
+
+    url(r'^payment/list/$', payment.payment_list,name='payment_list'),
+    url(r'^payment/add/$', payment.payment_add,name='payment_add'),
+    url(r'^payment/edit/(?P&lt;pid&gt;\d+)/$', payment.payment_edit,name='payment_edit'),
+    url(r'^payment/del/(?P&lt;pid&gt;\d+)/$', payment.payment_del,name='payment_del'),
+    url(r'^login/$',account.login,name='login'),
+    url('^logout/$',account.logout,name='logout')
+]
+</code></pre>
+            <h3><a id="user-content-权限信息录入" class="anchor" aria-hidden="true" href="#权限信息录入">
+                <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16"
+                     aria-hidden="true">
+                    <path fill-rule="evenodd"
+                          d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+                </svg>
+            </a>权限信息录入
+            </h3>
+            <p>相关配置：自动发现权限时过滤的权限</p>
+            <pre><code>AUTO_EXCLUDE_LIST = [
+        '/admin/.*',
+        '/login/',
+        '/logout/',
+        '/index/'
+    ]
+</code></pre>
+            <p>在根路由添加rbac的路由分发，必须设置namespace='rbac'</p>
+            <pre><code>urlpatterns = [
+    ...
+    url(r'^rbac/',include('rbac.urls',namespace='rbac')),
+]
+</code></pre>
+            <p>rbac提供的地址进行操作</p>
+            <pre><code>http://127.0.0.1:8000/rbac/menu/list/ # 菜单列表
+
+http://127.0.0.1:8000/rbac/multi/permission/ # 批量操作(增加，删除，更新)权限
+
+http://127.0.0.1:8000/rbac/role/list/ # 角色列表
+
+http://127.0.0.1:8000/rbac/distribute/permission # 用户分配角色，角色分配权限
+</code></pre>
+            <h3><a id="user-content-用户登陆权限处理进行权限初始化" class="anchor" aria-hidden="true" href="#用户登陆权限处理进行权限初始化">
+                <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16"
+                     aria-hidden="true">
+                    <path fill-rule="evenodd"
+                          d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+                </svg>
+            </a>用户登陆权限处理【进行权限初始化】
+            </h3>
+            <p>相关的配置:权限和菜单的session_key</p>
+            <pre><code>PERMISSION_SESSION_KEY = 'permission_list'
+PERMISSION_SESSION_MENU = 'permission_menu_list'
+</code></pre>
+            <p>设置需要登陆但是不需要进行权限校验的url</p>
+            <pre><code>NO_PERMISSION_URL = [
+    '/logout/',
+    '/index/'
+]
+</code></pre>
+            <pre><code>from django.shortcuts import HttpResponse,render,redirect
+from rbac.models import UserInfo # 根据实际情况进行更改
+from rbac.service.init_permission import init_permission # 重要
+def login(request):
+    if request.method =='GET':
+        return render(request,'login.html')
+
+    # 1.  用户登陆
+    user = request.POST.get('user')
+    pwd = request.POST.get('pwd')
+    current_user = UserInfo.objects.filter(username=user, password=pwd).first()
+    if not current_user:
+        msg = '登陆失败，用户或者密码错误'
+        return render(request, 'login.html', {'msg': msg})
+
+
+    # 根据当前用户信息获取此用户所拥有的所有权限，并放入session
+    # 2. 权限信息初始化（重要）
+    init_permission(request,current_user)
+    return redirect('/customer/list/')
+</code></pre>
+            <h3><a id="user-content-通过中间件进行权限校验" class="anchor" aria-hidden="true" href="#通过中间件进行权限校验">
+                <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16"
+                     aria-hidden="true">
+                    <path fill-rule="evenodd"
+                          d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+                </svg>
+            </a>通过中间件进行权限校验
+            </h3>
+            <pre><code># 配置中间件
+MIDDLEWARE = [
+                ...
+                ...
+    'rbac.middleware.rbac.RbacMiddleware'
+
+]
+
+# 白名单：所有人都可以访问的url
+VALID_URL_LIST = [
+        '/login/',
+        '/admin/.*',
+]
+</code></pre>
+            <h3><a id="user-content-粒度控制到按钮级别" class="anchor" aria-hidden="true" href="#粒度控制到按钮级别">
+                <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16"
+                     aria-hidden="true">
+                    <path fill-rule="evenodd"
+                          d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+                </svg>
+            </a>粒度控制到按钮级别
+            </h3>
+            <p>
+                控制一个用户是否拥有该a标签或者按钮的权限去显示或者隐藏该按钮，必须某个用户只有查看用户列表的权限，编辑用户与删除用户的按钮不应该显示在页面，rbac组件给该功能提供了一个模板语法。例：判断显示还是隐藏添加客户的按钮</p>
+            <pre><code># 导入自定义模板
+# {% load rbac %}
+# 固定格式 request|has_permission:url的别名,该模板语法返回值是True或者False，返回True则渲染该按钮
+# {% if request|has_permission:'customer_add' %}
+                    #     &lt;a href='{% url 'customer_add' %}&gt;添加客户&lt;/a&gt;
+                    # {% endif %}
+
+</code></pre>
+            <h3><a id="user-content-总结目的是希望在任意系统中应用权限系统" class="anchor" aria-hidden="true" href="#总结目的是希望在任意系统中应用权限系统">
+                <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16"
+                     aria-hidden="true">
+                    <path fill-rule="evenodd"
+                          d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+                </svg>
+            </a>总结：目的是希望在任意系统中应用权限系统
+            </h3>
+            <ul>
+                <li>用户登陆 + 用户首页 + 用户注销 业务逻辑</li>
+                <li>项目业务逻辑开发
+                    <ul>
+                        <li>开发时灵活的去设置layut.html中的两个inclusion_tag，开发时去掉，上线时放在你layout项目中预留的位置</li>
+                    </ul>
+                </li>
+            </ul>
+            <pre><code># 渲染菜单
+{% multi_menu request %}
+
+# 渲染导航
+{% url_record request %}
+</code></pre>
+            <ul>
+                <li>权限信息的录入</li>
+                <li>配置文件</li>
+            </ul>
+            <pre><code>INSTALLED_APPS = [
+            ...
+    'rbac.apps.RbacConfig',
+]
+
+MIDDLEWARE = [
+            ...
+    'rbac.middleware.rbac.RbacMiddleware'
+
+]
+# 权限相关的配置
+PERMISSION_SESSION_KEY = 'permission_list'
+PERMISSION_SESSION_MENU = 'permission_menu_list'
+
+# 白名单
+VALID_URL_LIST = [
+        '/login/',
+        '/admin/.*',
+]
+
+# 自动发现路由时过滤的url
+AUTO_EXCLUDE_LIST = [
+        '/admin/.*',
+        '/login/',
+        '/logout/'
+    ]
+
+# 只需要登陆不需要进行权限校验
+NO_PERMISSION_URL = [
+    '/logout/',
+    '/index/'
+]
+
+# 业务中UserInfo表的路径
+RBAC_USER_MODEL_CLASS = 'app01.models.UserInfo'
+</code></pre>
+        </article>
+
+    </div>
 
 </nav>
 </body>
