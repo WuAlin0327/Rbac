@@ -1,6 +1,10 @@
 ## Rbac(基于角色的权限管理组件)使用文档
-1. 复制rbac到你的项目中
-2. 将rbac/migtations中的迁移记录删除
+1. 克隆该项目到你的电脑上
+```
+git clone https://github.com/WuAlin0327/CRM
+```
+2. 复制rbac到你的项目中
+3. 将rbac/migtations中的迁移记录删除
 
 
 ### 业务系统
