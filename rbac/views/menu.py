@@ -7,6 +7,8 @@ from django.forms import formset_factory
 from rbac.service.get_url import get_all_url_dict
 from collections import OrderedDict
 from django.urls import reverse
+from django.utils.module_loading import import_string
+from django.conf import settings
 
 
 def menu_list(request):
@@ -372,10 +374,11 @@ def distribute_permission(request):
     user_has_permission_list = None
     role_has_permission_list = None
     user_id = request.GET.get('uid')
-    user_object = models.UserInfo.objects.filter(id=user_id).first()
+
+    user_class = import_string(settings.RBAC_USER_MODEL_CLASS)
+    user_object = user_class.objects.filter(id=user_id).first()
     rid = request.GET.get('rid')
     role_obj = models.Role.objects.filter(id=rid).first()
-
     # post请求
     post_type = request.GET.get('type')
     if request.method == 'POST' and post_type == 'role':

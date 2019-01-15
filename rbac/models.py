@@ -44,8 +44,8 @@ class UserInfo(models.Model):
     def __str__(self):
         return self.username
 
-    class Meta:
-        abstract = True
+    # class Meta:
+    #     abstract = True
 
 
 class Menu(models.Model):

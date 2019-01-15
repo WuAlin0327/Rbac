@@ -147,12 +147,22 @@ STATIC_FILES_DIR = [
 PERMISSION_SESSION_KEY = 'permission_list'
 PERMISSION_SESSION_MENU = 'permission_menu_list'
 
+# 白名单
 VALID_URL_LIST = [
         '/login/',
-        '/admin/.*'
+        '/admin/.*',
 ]
 
+# 自动发现路由时过滤的url
 AUTO_EXCLUDE_LIST = [
         '/admin/.*',
-        '/login/'
+        '/login/',
+        '/logout/'
     ]
+
+# 只需要登陆不需要进行权限校验
+NO_PERMISSION_URL = [
+    '/logout/',
+    '/index/'
+]
+RBAC_USER_MODEL_CLASS = 'rbac.models.UserInfo'

@@ -19,5 +19,8 @@ def login(request):
     init_permission(request,current_user)
     return redirect('/customer/list/')
 
+def logout(request):
+    request.session.delete()
+    return redirect('/login/')
 
 

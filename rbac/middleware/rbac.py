@@ -26,6 +26,16 @@ class RbacMiddleware(MiddlewareMixin):
 
         if not permission_dict:
             return HttpResponse('请进行登陆')
+
+        for url in settings.NO_PERMISSION_URL:
+            if re.match(url,request_url):
+                # 登陆后不需要权限就可以进行访问的
+                request.selected_id = 0
+                request.url_record = request_url
+                return None
+
+
+
         flag = False
 
         url_record = [
